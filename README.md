@@ -17,7 +17,6 @@ https://ghibliapi.vercel.app
 The schema exposes:
 
 - `film(id: ID!): FilmLookupResult!`
-- `filmsByDirector(director: FilmDirector!, limit: Int = 5): [Film!]!`
 
 The public `Film` type stays intentionally small: `id`, `name`, `detail`, `tags`, and `summary`.
 
@@ -34,8 +33,6 @@ Functional requirements:
 - validate and normalize `id` for `film`
 - return `INVALID_INPUT`, `NOT_FOUND`, and `UPSTREAM_ERROR` in the lookup result when appropriate
 - map REST DTOs into the GraphQL model with null/default/sorted-array handling
-- sort `filmsByDirector` results by `name`, then apply `limit`
-- treat negative limits as `0`
 - compute a deterministic `Film.summary`
 
 ## How To Run

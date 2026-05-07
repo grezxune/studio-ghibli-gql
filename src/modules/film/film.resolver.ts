@@ -1,14 +1,10 @@
 import { type AppContext } from '../../context.js';
-import { type FilmLookupResult, type FilmModel, type FilmDirector } from './film.types.js';
+import { type FilmLookupResult, type FilmModel } from './film.types.js';
 
 interface FilmQueryArgs {
   id: string;
 }
 
-interface FilmCollectionQueryArgs {
-  director: FilmDirector;
-  limit?: number | null;
-}
 
 const normalizeFilmId = (id: string): string => id.trim().toLowerCase();
 
@@ -24,9 +20,7 @@ export const filmResolvers = {
           film: null,
           error: {
             code: 'INVALID_INPUT',
-            message: 'TODO: return a clearer invalid-input message',
-          },
-        };
+            message: 'TODO: return a clearer invalid-input message' } };
       }
 
       // TODO:
@@ -36,16 +30,6 @@ export const filmResolvers = {
       // - return the mapped film on success
       throw new Error('TODO: implement Query.film');
     },
-
-    filmsByDirector: async (_parent: unknown, _arguments: FilmCollectionQueryArgs, _context: AppContext): Promise<FilmModel[]> => {
-      // TODO:
-      // - fetch films for the requested director
-      // - map each DTO into the GraphQL model
-      // - sort by name
-      // - apply limit after sorting
-      // - treat negative limits as 0
-      throw new Error('TODO: implement Query.filmsByDirector');
-    },
   },
 
   Film: {
@@ -54,6 +38,4 @@ export const filmResolvers = {
       // - derive a readable summary from the mapped FilmModel
       // - include name, id, director, metric, and detail/fallback
       throw new Error('TODO: implement Film.summary');
-    },
-  },
-};
+    } } };

@@ -1,10 +1,4 @@
 export const filmTypeDefs = /* GraphQL */ `
-  enum FilmDirector {
-    MIYAZAKI
-    TAKAHATA
-    YONEBAYASHI
-  }
-
   enum FilmLookupErrorCode {
     INVALID_INPUT
     NOT_FOUND
@@ -31,6 +25,5 @@ export const filmTypeDefs = /* GraphQL */ `
 
   extend type Query {
     film(id: ID!): FilmLookupResult!
-    filmsByDirector(director: FilmDirector!, limit: Int = 5): [Film!]!
   }
 `;

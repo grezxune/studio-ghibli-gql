@@ -1,11 +1,4 @@
 import { z } from 'zod';
-import { type FilmDirector } from '../modules/film/film.types.js';
-
-const directorToApiValue = {
-  'MIYAZAKI': 'Hayao Miyazaki',
-  'TAKAHATA': 'Isao Takahata',
-  'YONEBAYASHI': 'Hiromasa Yonebayashi',
-} as const;
 
 const isPresentString = (value: string | null | undefined): value is string =>
   typeof value === 'string' && value.trim().length > 0;
@@ -20,16 +13,13 @@ const RestFilmRecordSchema = z.object({
 });
 
 const RawFilmSchema = z.object({ id: z.string(), title: z.string(), description: z.string().optional().nullable(), director: z.string().optional().nullable(), producer: z.string().optional().nullable(), rt_score: z.string().optional().nullable(), people: z.array(z.string()).optional().nullable() });
-const RawFilmCollectionSchema = z.array(RawFilmSchema);
 const toRecord = (film: z.infer<typeof RawFilmSchema>): RestFilmRecord => ({ id: film.id, name: film.title, description: film.description, directorName: film.director, score: Number.parseInt(film.rt_score ?? '', 10), credits: [film.director, film.producer, ...(film.people ?? [])].filter(isPresentString) });
 const parseOne = (body: unknown): RestFilmRecord => toRecord(RawFilmSchema.parse(body));
-const parseMany = (body: unknown): RestFilmRecord[] => RawFilmCollectionSchema.parse(body).map(toRecord);
 
 export type RestFilmRecord = z.infer<typeof RestFilmRecordSchema>;
 
 export interface StudioGhibliApiContract {
   getFilmById(id: string): Promise<RestFilmRecord | null>;
-  getFilmsByDirector(director: FilmDirector): Promise<RestFilmRecord[]>;
 }
 
 export class UpstreamServiceError extends Error {
@@ -46,11 +36,6 @@ export class StudioGhibliApi implements StudioGhibliApiContract {
     return this.fetchOne(`/films/${encodeURIComponent(id)}`, { allowNotFound: true });
   }
 
-  async getFilmsByDirector(director: FilmDirector): Promise<RestFilmRecord[]> {
-    const films = await this.fetchMany('/films');
-    return films.filter((film) => film.directorName === directorToApiValue[director]);
-  }
-
   private async fetchOne(path: string, options: { allowNotFound?: boolean } = {}): Promise<RestFilmRecord | null> {
     const response = await fetch(`${this.baseUrl}${path}`);
 
@@ -64,16 +49,5 @@ export class StudioGhibliApi implements StudioGhibliApiContract {
 
     const body: unknown = await response.json();
     return parseOne(body);
-  }
-
-  private async fetchMany(path: string): Promise<RestFilmRecord[]> {
-    const response = await fetch(`${this.baseUrl}${path}`);
-
-    if (!response.ok) {
-      throw new UpstreamServiceError(`Studio Ghibli API request failed with status ${response.status}`);
-    }
-
-    const body: unknown = await response.json();
-    return parseMany(body);
   }
 }

@@ -1,7 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { type AppContext } from '../src/context.js';
 import { type RestFilmRecord, UpstreamServiceError } from '../src/datasources/studio-ghibli-api.js';
-import { type FilmDirector } from '../src/modules/film/film.types.js';
 import { createServer } from '../src/server.js';
 
 const lookupQuery = /* GraphQL */ `
@@ -22,33 +21,21 @@ const lookupQuery = /* GraphQL */ `
   }
 `;
 
-const collectionQuery = /* GraphQL */ `
-  query Collection($director: FilmDirector!, $limit: Int) {
-    filmsByDirector(director: $director, limit: $limit) {
-      id
-      name
-    }
-  }
-`;
 
 const primary: RestFilmRecord = { id: '58611129-2dbc-4a81-a72f-77ddfc1b1b49', name: 'My Neighbor Totoro', description: 'Two girls move to the country.', directorName: 'Hayao Miyazaki', score: 93, credits: ['Hayao Miyazaki', 'catbus'] };
-const second: RestFilmRecord = { id: '2baf70d1-42bb-4437-b551-e5fed5a87abe', name: "Kiki's Delivery Service", description: 'A young witch starts a delivery service.', directorName: 'Hayao Miyazaki', score: 96, credits: ['Hayao Miyazaki'] };
-const third: RestFilmRecord = { id: 'cd3d059c-09f4-4ff3-8d63-bc765a5184fa', name: 'Castle in the Sky', description: 'A search for a floating castle.', directorName: 'Hayao Miyazaki', score: 95, credits: ['Hayao Miyazaki'] };
 
 const createMockContext = () => {
   const getFilmById = vi.fn(async (_id: string) => null as RestFilmRecord | null);
-  const getFilmsByDirector = vi.fn(async (_director: FilmDirector) => [] as RestFilmRecord[]);
 
   const context: AppContext = {
     dataSources: {
       studioGhibliApi: {
         getFilmById,
-        getFilmsByDirector,
       },
     },
   };
 
-  return { context, getFilmById, getFilmsByDirector };
+  return { context, getFilmById };
 };
 
 const executeSingle = async (query: string, variables: Record<string, unknown>, contextValue: AppContext) => {
@@ -141,39 +128,6 @@ describe('film queries', () => {
           message: 'Studio Ghibli API is currently unavailable.',
         },
       },
-    });
-  });
-
-  it('sorts films by name before applying the limit', async () => {
-    const { context, getFilmsByDirector } = createMockContext();
-    getFilmsByDirector.mockResolvedValue([second, primary, third]);
-
-    const result = await executeSingle(collectionQuery, { director: 'MIYAZAKI', limit: 2 }, context);
-
-    expect(result.errors).toBeUndefined();
-    expect(result.data).toEqual({
-      filmsByDirector: [
-        {
-          id: 'cd3d059c-09f4-4ff3-8d63-bc765a5184fa',
-          name: 'Castle in the Sky',
-        },
-        {
-          id: '2baf70d1-42bb-4437-b551-e5fed5a87abe',
-          name: "Kiki's Delivery Service",
-        },
-      ],
-    });
-  });
-
-  it('treats a negative limit as zero', async () => {
-    const { context, getFilmsByDirector } = createMockContext();
-    getFilmsByDirector.mockResolvedValue([second, primary, third]);
-
-    const result = await executeSingle(collectionQuery, { director: 'MIYAZAKI', limit: -3 }, context);
-
-    expect(result.errors).toBeUndefined();
-    expect(result.data).toEqual({
-      filmsByDirector: [],
     });
   });
 });
